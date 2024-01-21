@@ -85,8 +85,7 @@
  3rd Qu.:  1070     
  Max.   :227959     
  NA's   :240        
-> # using additioanl statistics with the help of psych library:
-> flight_data_initial <- read.csv('D:/STUDY WSZiB/Airline_Delay_Cause.csv', sep = ";")
+> # using additional statistics with the help of psych library:
 > library(psych)
 > describe(flight_data_initial)
                     vars      n    mean       sd median trimmed     mad  min
@@ -206,7 +205,7 @@ late_aircraft_delay
 > # converting columns to numeric:
 > columns_to_convert <- c("carrier_ct", "weather_ct", "nas_ct", "security_ct", "late_aircraft_ct")
 > for (col in columns_to_convert){
-+ flight_data_test[[col]] <- as.numeric(gsub(",",".", as.character(flight_data_test[[col]])))}
+flight_data_test[[col]] <- as.numeric(gsub(",",".", as.character(flight_data_test[[col]])))}
 > str(flight_data_test)
 'data.frame':   171223 obs. of  21 variables:
  $ year               : int  2023 2023 2023 2023 2023 2023 2023 2023 2023 2023 ...
