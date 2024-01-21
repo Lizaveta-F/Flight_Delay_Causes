@@ -33,6 +33,7 @@
  $ nas_delay          : int  118 62 78 388 134 4676 111 25 87 0 ...
  $ security_delay     : int  0 0 0 0 0 0 0 0 0 0 ...
  $ late_aircraft_delay: int  425 518 444 218 768 11196 27 182 73 889 ...
+-------------------------------------------------------------------------------
 > #2. Exploratory data analysis (EDA)
 > #- Descriptive Statistics:
 > summary(flight_data_initial)
@@ -157,6 +158,7 @@ late_aircraft_delay
 [16] arr_delay           carrier_delay       weather_delay      
 [19] nas_delay           security_delay      late_aircraft_delay
 <0 строк> (или 'row.names' нулевой длины)
+--------------------------------------------------------------------------
 > # 3. Data cleaning
 > #identifying rows with complete cases:
 > complete_rows <- complete.cases(flight_data_initial)
@@ -311,6 +313,7 @@ late_aircraft_delay
  $ nas_delay          : int  118 62 78 388 134 111 25 87 0 1049 ...
  $ security_delay     : int  0 0 0 0 0 0 0 0 0 0 ...
  $ late_aircraft_delay: int  425 518 444 218 768 27 182 73 889 348 ...
+--------------------------------------------------------------------------------
 > #4. Initial Data Visualization:
 > library(ggplot2)
 + #1. Time Series Analysis:
@@ -318,9 +321,6 @@ late_aircraft_delay
 + geom_line() +
 + labs(title = "Time Series of Arrival Delays", x = "Year", y = "Number of arrival delays")
 > # for above code I am exploring the trends in arrival delays over time using a time series plot.
-![Time Series of Arrival Delays graph](Time_series_of_arrival_delays.jpg)
-<img src="Time_series_of_arrival_delays.jpg" alt="Time Series of Arrival Delays graph">
-
 
 > #2. Bar Chart for Categorical Variables:
 > #visualization of the distribution of flights and delays:
@@ -332,15 +332,18 @@ late_aircraft_delay
 > ggplot(flight_data_clean_iqr, aes(x = airport, fill = arr_del15)) +
 + geom_bar() +
 + labs(title = "Arrival Delays by Airport", x = "Airport", y = "Count of Arrival Delays")
+
 > # 3. Correlation Heatmap:
 > install.packages("viridis")
 > library(viridis)
 > heatmap(correlation_matrix, col = viridis::viridis(20), main = "Correlation Heatmap of Delay Types")
+
 #4. Boxplots for Key Metrics:
 > #Visualize the distribution of key metrics using boxplots.
 > ggplot(flight_data_clean_iqr, aes(x = carrier, y = arr_delay)) +
 + geom_boxplot() +
 + labs(title = "Boxplot of Arrival Delays by Carrier", x = "Carrier", y = "Number of arrival delays")
+
 # 5. Pair Plots:
 > install.packages("GGally")
 > library(GGally)
