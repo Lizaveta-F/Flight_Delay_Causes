@@ -319,6 +319,8 @@ late_aircraft_delay
 + labs(title = "Time Series of Arrival Delays", x = "Year", y = "Number of arrival delays")
 > # for above code I am exploring the trends in arrival delays over time using a time series plot.
 ![Time Series of Arrival Delays graph](Time_series_of_arrival_delays.jpg)
+<img src="Time_series_of_arrival_delays.jpg" alt="Time Series of Arrival Delays graph">
+
 
 > #2. Bar Chart for Categorical Variables:
 > #visualization of the distribution of flights and delays:
