@@ -315,11 +315,14 @@ flight_data_test[[col]] <- as.numeric(gsub(",",".", as.character(flight_data_tes
 --------------------------------------------------------------------------------
 > #4. Initial Data Visualization:
 > library(ggplot2)
-#1. Time Series Analysis:
-> ggplot(flight_data_clean_iqr, aes(x = year, y = arr_delay)) +
-+ geom_line() +
-+ labs(title = "Time Series of Arrival Delays", x = "Year", y = "Number of arrival delays")
-> # for above code I am exploring the trends in arrival delays over time using a time series plot.
+#1. Time Series Analysis by Year:
+ggplot(flight_data_clean_iqr, aes(x = year, y = arr_del15)) +
+  geom_line(color = "blue", size = 1) +
+  labs(title = "Yearly Distribution of Arrival Delays", x = "Year", y = "Count of Arrival Delays") +
+  theme_minimal() +
+  scale_x_continuous(breaks = unique(flight_data_clean_iqr$year)) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+> # for above code I am exploring the trends in arrival delays over time.
 
 #1.1 Monthly Distribution of Arrival Delays
 ggplot(flight_data_clean_iqr, aes(x = as.Date(paste0("2022-", month, "-01")), fill = arr_del15)) +
