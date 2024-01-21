@@ -362,6 +362,8 @@ ggpairs(pair_plot_columns)
 # 6. Pie chart:
 > install.packages("tidyr")
 > library(tidyr)
+delay_sums <- flight_data_clean_iqr %>%
+  summarise_at(vars(carrier_ct:late_aircraft_ct), sum)
 # Assuming delay_sums is a data frame
 > delay_sums_long <- pivot_longer(delay_sums, cols = carrier_ct:late_aircraft_ct, names_to = "Delay_Type", values_to = "Count")
 # Calculate percentage
