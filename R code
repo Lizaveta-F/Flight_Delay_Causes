@@ -316,11 +316,18 @@ late_aircraft_delay
 --------------------------------------------------------------------------------
 > #4. Initial Data Visualization:
 > library(ggplot2)
-+ #1. Time Series Analysis:
+#1. Time Series Analysis:
 > ggplot(flight_data_clean_iqr, aes(x = year, y = arr_delay)) +
 + geom_line() +
 + labs(title = "Time Series of Arrival Delays", x = "Year", y = "Number of arrival delays")
 > # for above code I am exploring the trends in arrival delays over time using a time series plot.
+
+#1.1 Monthly Distribution of Arrival Delays
+ggplot(flight_data_clean_iqr, aes(x = as.Date(paste0("2022-", month, "-01")), fill = arr_del15)) +
+  geom_bar() +
+  labs(title = "Monthly Distribution of Arrival Delays", x = "Month", y = "Count of Arrival Delays") +
+  theme_minimal() +
+  scale_x_date(date_labels = "%B", date_breaks = "1 month")
 
 > #2. Bar Chart for Categorical Variables:
 > #visualization of the distribution of flights and delays:
@@ -351,3 +358,19 @@ late_aircraft_delay
 pair_plot_columns <- flight_data_clean_iqr[, c("arr_flights", "arr_del15", "carrier_ct", "weather_ct", "nas_ct")]
 # Create pair plot
 ggpairs(pair_plot_columns)
+
+# 6. Pie chart:
+> install.packages("tidyr")
+> library(tidyr)
+# Assuming delay_sums is a data frame
+> delay_sums_long <- pivot_longer(delay_sums, cols = carrier_ct:late_aircraft_ct, names_to = "Delay_Type", values_to = "Count")
+# Calculate percentage
+> delay_sums_long$Percentage <- (delay_sums_long$Count / sum(delay_sums_long$Count)) * 100
+# Pie chart with percentage labels
+> ggplot(delay_sums_long, aes(x = "", y = Percentage, fill = Delay_Type)) +
++   geom_bar(stat = "identity", width = 1, color = "white") +
++   geom_text(aes(label = paste0(round(Percentage, 1), "%")), position = position_stack(vjust = 0.5)) +
++   coord_polar("y") +
++   labs(title = "Percentage of Delay Causes", fill = "Delay Type") +
++   theme_void() +
++   theme(legend.position = "bottom")
