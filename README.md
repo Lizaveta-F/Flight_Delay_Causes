@@ -97,3 +97,33 @@ Create basic visualizations (e.g., bar plots, histograms, scatterplots) using R'
 
 6. **Summary and Documentation**:<br/>
 Document observations, initial insights, and potential next steps.
+
+____
+**`Modeling`**<br/> 
+<br/> 
+The modeling phase involves the development and evaluation of machine learning models based on the insights gained during the data preparation and exploration phases.I will follow these steps for the modeling phase:
+
+1. **Model Selection**:<br/>
+ - Choose appropriate modeling techniques based on the nature of the problem (e.g., regression for predicting flight delays).
+ - Consider algorithms such as linear regression, decision trees, random forests, or gradient boosting for regression tasks.
+
+2. **Feature Engineering**:<br/>
+ - Identify relevant features for the model based on insights gained during data exploration.
+
+3. **Model Training**:<br/>
+ - Split the dataset into training and testing sets.
+ - Use the training set to train selected models with the chosen algorithms.
+ - Implement regression models using R libraries such as RevoScaleR or other relevant libraries
+
+4. **Model Evaluation**:<br/>
+ - Evaluate model performance using appropriate metrics (e.g., Mean Absolute Error, Root Mean Squared Error, R-squared).
+ - Utilize techniques like cross-validation to ensure robustness of the model evaluation.
+
+5. ** Model Iteration**:<br/>
+Based on evaluation results, iterate on the model:
+ - Adjust hyperparameters to improve performance.
+ - Experiment with different algorithms.
+
+6. **Documentation**:<br/>
+ - Document the chosen model, hyperparameters, and reasons for model decisions.
+ - Capture insights gained during the modeling process.
