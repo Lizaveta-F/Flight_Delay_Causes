@@ -378,3 +378,182 @@ delay_sums <- flight_data_clean_iqr %>%
 +   labs(title = "Percentage of Delay Causes", fill = "Delay Type") +
 +   theme_void() +
 +   theme(legend.position = "bottom")
+--------------------------------------------------------------------------
+> # 5. Modeling
+
+# As beginning with SQL Server 2022 (16.x), runtime for R is no longer 
+shipped or installed with SQL Server setup. 
+Instead, I use the following sections to install the custom runtimes and packages.
+install.packages("iterators")
+install.packages("foreach")
+install.packages("R6")
+install.packages("jsonlite")
+install.packages("https://aka.ms/sqlml/r4.2/windows/CompatibilityAPI_1.1.0.zip", repos=NULL)
+install.packages("https://aka.ms/sqlml/r4.2/windows/RevoScaleR_10.0.1.zip", repos=NULL)
+
+# installing the RevoScaleR package, which is a part of the Microsoft R Server distribution. 
+RevoScaleR provides functions for scalable and distributed computing in R, particularly for working with large datasets.
+install.packages("RevoScaleR")
+library(RevoScaleR)
+
+#renaming the dataset for better readability
+fld_cleaned <- flight_data_clean_iqr
+
+#Converting dataset to dataframe:
+fld_cleaned <- as.data.frame(unclass(fld_cleaned), stringsAsFactors = TRUE)
+
+# Now will check the classes of dataframe
+sapply(fld_cleaned, class) #to check all the classes
+
+  year               month             carrier        carrier_name             airport        airport_name         arr_flights           arr_del15 
+          "integer"           "integer"            "factor"            "factor"            "factor"            "factor"           "integer"           "integer" 
+         carrier_ct          weather_ct              nas_ct         security_ct    late_aircraft_ct       arr_cancelled        arr_diverted           arr_delay 
+          "numeric"           "numeric"           "numeric"           "numeric"           "numeric"           "integer"           "integer"           "integer" 
+      carrier_delay       weather_delay           nas_delay      security_delay late_aircraft_delay 
+          "integer"           "integer"           "integer"           "integer"           "integer" 
+
+
+# The purpose of these steps is to prepare the data for further analysis or modeling using 
+the RevoScaleR package, ensuring that it's in a suitable format and class for the functions provided by RevoScaleR.
+
+# Step 1: Constructing a basic linear regression model.
+
+#In an effort to discover a more effective model, I will assess various scenarios by modifying the model formula and adjusting the size of the training subset.
+
+#1st try:
+
+#here I am setting the seed for the random number generator
+set.seed(123)
+
+# Here I split the Data into Training and Testing Sets
+split_index <- sample(seq_len(nrow(fld_cleaned)), size = 0.8 * nrow(fld_cleaned))
+train_data <- fld_cleaned[split_index, ]
+test_data <- fld_cleaned[-split_index, ]
+
+#The line below defines the formula for the linear regression model. It specifies that I want to predict arr_del15 based on the specified predictors.
+model_formula <- as.formula("arr_del15 ~ year + month + carrier + airport + arr_flights + weather_delay")
+
+#Below I use RevoScaleR's rxLinMod function to train a linear regression model (model_lm) using the specified formula and the training data.
+model_lm <- rxLinMod(model_formula, data = train_data)
+#Using the trained model, this line makes predictions on the test set (test_data) using RevoScaleR's rxPredict function.
+Rows Read: 120102, Total Rows Processed: 120102, Total Chunk Time: 0.010 seconds 
+Computation time: 0.083 seconds.
+
+predictions_lm <- rxPredict(model_lm, data = test_data)
+
+#Here I use the evaluateRegressor function(which was predefined) to assess the performance of the linear regression model on the test set. 
+
+evaluateRegressor <- function(observed, predicted) {
+mean_observed <- mean(observed)
+se <- (observed - predicted)^2
+ae <- abs(observed - predicted)
+sem <- (observed - mean_observed)^2
+aem <- abs(observed - mean_observed)
+mae <- mean(ae)
+rmse <- sqrt(mean(se))
+rae <- sum(ae) / sum(aem)
+rse <- sum(se) / sum(sem)
+rsq <- 1 - rse
+metrics <- c("Mean Absolute Error" = mae,"Root Mean Squared Error" = rmse,"Relative Absolute Error" = rae,"Relative Squared Error" = rse,"Coefficient of Determination" = rsq)
+return(metrics)
+}
+
+eval_lm <- evaluateRegressor(test_data$arr_del15, predictions_lm)
+print(eval_lm)
+  Mean Absolute Error      Root Mean Squared Error      Relative Absolute Error       Relative Squared Error Coefficient of Determination 
+                          16,45                           23,5                    0.5053950                    0.3442932                    0.6557068
+
+
+#2d try (increased the size of the trained data):
+
+set.seed(123)
+split_index <- sample(seq_len(nrow(fld_cleaned)), size = 0.9 * nrow(fld_cleaned))
+train_data <- fld_cleaned[split_index, ]
+test_data <- fld_cleaned[-split_index, ]
+model_formula <- as.formula("arr_del15 ~ year + month + carrier + airport + arr_flights + weather_delay")
+model_lm <- rxLinMod(model_formula, data = train_data)
+
+Rows Read: 135115, Total Rows Processed: 135115, Total Chunk Time: 0.012 seconds 
+Computation time: 0.067 seconds.
+
+predictions_lm <- rxPredict(model_lm, data = test_data)
+eval_lm <- evaluateRegressor(test_data$arr_del15, predictions_lm)
+print(eval_lm)
+
+Mean Absolute Error      Root Mean Squared Error      Relative Absolute Error       Relative Squared Error Coefficient of Determination 
+                          15,5                           21,4                    0.5039949                    0.3161123                    0.6838877 
+
+#From what we can see the 2d option for now performed better than 1st one as :
+Mean Absolute Error (MAE): Model 2 has a slightly lower MAE, indicating better accuracy in predicting the absolute values of the response variable.
+Root Mean Squared Error (RMSE): Model 2 has a lower RMSE, suggesting better overall performance in predicting the response variable.
+Relative Absolute Error (RAE): Both models have similar RAE, and Model 2 is slightly lower, indicating better accuracy relative to the scale of the response variable.
+Relative Squared Error (RSE): Model 2 has a lower RSE, suggesting better performance in explaining the variability of the response variable.
+Coefficient of Determination (R²): Model 2 has a higher R², indicating a better fit to the data.
+
+3d# try (broaden the formula)
+set.seed(123)
+split_index <- sample(seq_len(nrow(fld_cleaned)), size = 0.9 * nrow(fld_cleaned))
+train_data <- fld_cleaned[split_index, ]
+test_data <- fld_cleaned[-split_index, ]
+model_formula <- as.formula("arr_del15 ~ year + month + carrier + airport + arr_flights+ weather_delay+arr_cancelled")
+model_lm <- rxLinMod(model_formula, data = train_data)
+
+Rows Read: 135115, Total Rows Processed: 135115, Total Chunk Time: 0.017 seconds 
+Computation time: 0.112 seconds.
+
+predictions_lm <- rxPredict(model_lm, data = test_data)
+eval_lm <- evaluateRegressor(test_data$arr_del15, predictions_lm)
+print(eval_lm)
+
+
+         Mean Absolute Error      Root Mean Squared Error      Relative Absolute Error       Relative Squared Error Coefficient of Determination 
+                          14,8                           20,57                    0.4870926                    0.2897487                    0.7102513 
+
+#Model 3 outperforms both Model 1 and Model 2 in terms of all evaluation metrics, 
+demonstrating superior accuracy, precision, and overall goodness of fit to the data.
+
+4th# try (broaden the formula)
+set.seed(123)
+split_index <- sample(seq_len(nrow(fld_cleaned)), size = 0.9 * nrow(fld_cleaned))
+train_data <- fld_cleaned[split_index, ]
+test_data <- fld_cleaned[-split_index, ]
+model_formula <- as.formula("arr_del15 ~ year + month + carrier + airport + arr_flights+ weather_delay + arr_cancelled + security_delay")
+model_lm <- rxLinMod(model_formula, data = train_data)
+
+Rows Read: 135115, Total Rows Processed: 135115, Total Chunk Time: 0.019 seconds 
+Computation time: 0.080 seconds.
+
+predictions_lm <- rxPredict(model_lm, data = test_data)
+eval_lm <- evaluateRegressor(test_data$arr_del15, predictions_lm)
+print(eval_lm)
+
+         Mean Absolute Error      Root Mean Squared Error      Relative Absolute Error       Relative Squared Error Coefficient of Determination 
+                          14,6                           20,34                    0.4865205                    0.2889741                    0.7110259 
+
+# The new model shows a slight improvement in several evaluation metrics compared to Model 3.Let's stop here for now.
+
+
+# Step 2 : Constructing a decision tree regression model to see whether we get better results
+
+model_tree <- rxDTree(model_formula, data = train_data)
+predictions_tree <- rxPredict(model_tree, data = test_data)
+eval_tree <- evaluateRegressor(test_data$arr_del15, predictions_tree)
+print(eval_tree)
+
+Mean Absolute Error      Root Mean Squared Error      Relative Absolute Error       Relative Squared Error Coefficient of Determination 
+                          12,87                           18,88                    0.3808079                    0.1942618                    0.8057382
+
+#In summary, the decision tree model appears to outperform the linear regression model based on these evaluation metrics.
+
+# Step 3: Constructing a random forest regression model
+
+model_rf <- rxDForest(formula = model_formula, data = train_data)
+predictions_rf <- rxPredict(model_rf, data = test_data)
+eval_rf <- evaluateRegressor(test_data$arr_del15, predictions_rf)
+print(eval_rf)
+
+print(eval_rf)
+         Mean Absolute Error      Root Mean Squared Error      Relative Absolute Error       Relative Squared Error Coefficient of Determination 
+                          12,9                           18,95                    0.3874807                    0.1948470                    0.8051530 
+
+#In summary, both models(decision tree and random forest) perform comparably, but the Decision Tree model has a slightly better performance based on RAE and RSE.
