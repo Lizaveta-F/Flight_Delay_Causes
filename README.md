@@ -119,7 +119,7 @@ The modeling phase involves the development and evaluation of machine learning m
  - Evaluate model performance using appropriate metrics (e.g., Mean Absolute Error, Root Mean Squared Error, R-squared).
  - Utilize techniques like cross-validation to ensure robustness of the model evaluation.
 
-5. ** Model Iteration**:<br/>
+5. **Model Iteration**:<br/>
 Based on evaluation results, iterate on the model:
  - Adjust hyperparameters to improve performance.
  - Experiment with different algorithms.
